@@ -33,13 +33,13 @@ const HomeScreen: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
-        College Classroom Scheduler
+        Middlesex College Classroom Scheduler
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
         Manage your semesters, rooms, and class schedules efficiently
       </Typography>
 
-      <Grid container spacing={3} sx={{ mt: 2, mb: 4 }}>
+      {/* <Grid container spacing={3} sx={{ mt: 2, mb: 4 }}>
         <Grid item xs={12} sm={4}>
           <Card>
             <CardContent>
@@ -73,7 +73,7 @@ const HomeScreen: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-      </Grid>
+      </Grid> */}
 
       <Box 
         sx={{ 
