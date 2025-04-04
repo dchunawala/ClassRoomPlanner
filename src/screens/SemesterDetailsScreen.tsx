@@ -33,7 +33,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext, Room } from '../context/AppContext';
 import RoomDetailsModal from '../components/RoomDetailsModal';
 import AddClassModal from '../components/AddClassModal';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
@@ -75,7 +75,7 @@ const emptyClass = (): NewClass => ({
 const SemesterDetailsScreen: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { semesters, rooms, classes, addRoom, addClass, editRoom, deleteRoom, editClass, deleteClass, checkRoomAvailability, checkScheduleConflict } = useAppContext();
+  const { semesters, rooms, classes, addRoom, addClass, editRoom, deleteRoom, editClass, deleteClass, checkRoomAvailability } = useAppContext();
   
   const [selectedRoom, setSelectedRoom] = useState<typeof semesterRooms[0] | null>(null);
   const [newRoom, setNewRoom] = useState<NewRoom>(emptyRoom());
@@ -352,8 +352,8 @@ const SemesterDetailsScreen: React.FC = () => {
                           <Select
                             value={editedClass.roomId}
                             onChange={(e) => setEditedClass({ ...editedClass, roomId: e.target.value })}
-                            error={editedClass.startTime && editedClass.endTime && editedClass.days.length > 0 && 
-                              !checkRoomAvailability(editedClass.roomId, editedClass.startTime, editedClass.endTime, editedClass.days, cls.id).available}
+                            error={Boolean(editedClass.startTime && editedClass.endTime && editedClass.days.length > 0 && 
+                              !checkRoomAvailability(editedClass.roomId, editedClass.startTime, editedClass.endTime, editedClass.days, cls.id).available)}
                           >
                             {semesterRooms
                               .filter(room => {
@@ -426,7 +426,7 @@ const SemesterDetailsScreen: React.FC = () => {
 
                             const validationResult = validateTuesdayThursdayRestriction(days, startTime, endTime);
                             if (!validationResult.valid) {
-                              setClassError(validationResult.message);
+                              setClassError(validationResult.message || 'Invalid time slot selected');
                               return;
                             }
 
@@ -609,7 +609,7 @@ const SemesterDetailsScreen: React.FC = () => {
 
                       const validationResult = validateTuesdayThursdayRestriction(days, startTime, endTime);
                       if (!validationResult.valid) {
-                        setClassError(validationResult.message);
+                        setClassError(validationResult.message || 'Invalid time slot selected');
                         return;
                       }
 
@@ -674,6 +674,7 @@ const SemesterDetailsScreen: React.FC = () => {
                 variant="outlined"
                 color="primary"
                 onClick={() => {
+                  if (!editingRoom) return;
                   editRoom(editingRoom.id, editedRoomNumber, parseInt(editedCapacity));
                   setEditingRoom(null);
                 }}
@@ -694,6 +695,7 @@ const SemesterDetailsScreen: React.FC = () => {
           <Button onClick={() => setEditingRoom(null)}>Cancel</Button>
           <Button 
             onClick={() => {
+              if (!editingRoom) return;
               if (!editedRoomNumber || !editedCapacity) {
                 setError('Please fill in all room fields');
                 return;

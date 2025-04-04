@@ -4,7 +4,9 @@ import {
   Paper,
   Typography,
   styled,
+  IconButton,
 } from '@mui/material';
+import PrintIcon from '@mui/icons-material/Print';
 import { useAppContext } from '../context/AppContext';
 import { Class } from '../context/AppContext';
 
@@ -33,22 +35,6 @@ const DayHeader = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.grey[100],
 }));
 
-const TimeLabel = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(1),
-  paddingTop: 0,
-  borderRight: `1px none ${theme.palette.divider}`,
-  borderBottom: `1px none ${theme.palette.divider}`,
-  width: '80px',
-  height: '57px',
-  textAlign: 'right',
-  position: 'relative',
-  zIndex: 1,
-  boxSizing: 'border-box',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'flex-start'
-}));
-
 const ClassBlock = styled(Paper)(({ theme }) => ({
   position: 'absolute',
   left: '4px',
@@ -68,8 +54,25 @@ const ClassBlock = styled(Paper)(({ theme }) => ({
 }));
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const printStyles = `
+  @media print {
+    body > *:not(.MuiDialog-root) {
+      display: none !important;
+    }
+    .MuiDialog-root {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+    }
+    .MuiDialog-paper {
+      box-shadow: none !important;
+      margin: 0 !important;
+    }
+  }
+`;
 const START_TIME = 8; // 8 AM
-const END_TIME = 24; // 10 PM
+const END_TIME = 23; // 10 PM
 
 const RoomCalendarView: React.FC<RoomCalendarViewProps> = ({ roomId }) => {
   const { classes } = useAppContext();
@@ -122,70 +125,107 @@ const RoomCalendarView: React.FC<RoomCalendarViewProps> = ({ roomId }) => {
     };
   };
 
+  const handlePrint = () => {
+    const style = document.createElement('style');
+    style.innerHTML = printStyles;
+    document.head.appendChild(style);
+
+    window.print();
+
+    // Remove print styles after printing
+    document.head.removeChild(style);
+  };
+
   return (
-    <Box sx={{ display: 'flex', overflow: 'auto', maxHeight: '80vh' }}>
-      {/* Time labels column */}
-      <Box sx={{ position: 'relative' }}>
-        <Box sx={{ height: '50px' }} /> {/* Empty corner */}
-        {Array.from({ length: END_TIME - START_TIME + 1 }, (_, i) => (
-          <Box 
-            key={i} 
-            sx={{ 
-              position: 'absolute', 
-              top: `${50 + (i * 57) - 10}px`, 
-              width: '80px', 
-              textAlign: 'right', 
-              paddingRight: 1,
-              zIndex: 1
-            }}
-          >
-            <Typography variant="body2">{getTimeString(START_TIME + i)}</Typography>
+    <Box sx={{ position: 'relative' }}>
+      <IconButton 
+        onClick={handlePrint}
+        sx={{ 
+          position: 'absolute', 
+          right: 8, 
+          top: 8,
+          zIndex: 3,
+          '@media print': {
+            display: 'none'
+          }
+        }}
+      >
+        <PrintIcon />
+      </IconButton>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          overflow: 'auto', 
+          maxHeight: '80vh',
+          '@media print': {
+            maxHeight: 'none',
+            overflow: 'visible'
+          }
+        }}
+      >
+        {/* Time labels column */}
+        <Box sx={{ position: 'relative' }}>
+          <Box sx={{ height: '50px' }} /> {/* Empty corner */}
+          {Array.from({ length: END_TIME - START_TIME + 1 }, (_, i) => (
+            <Box 
+              key={i} 
+              sx={{ 
+                position: 'absolute', 
+                top: `${50 + (i * 57) - 10}px`, 
+                width: '80px', 
+                textAlign: 'right', 
+                paddingRight: 1,
+                zIndex: 1
+              }}
+            >
+              <Typography variant="body2">{getTimeString(START_TIME + i)}</Typography>
+            </Box>
+          ))}
+          {/* Placeholder boxes to maintain column width */}
+          {Array.from({ length: END_TIME - START_TIME }, (_, i) => (
+            <Box key={i} sx={{ height: '57px', width: '80px' }} />
+          ))}
+        </Box>
+
+        {/* Days columns */}
+        {DAYS.map((day) => (
+          <Box key={day} sx={{ flex: 1, position: 'relative' }}>
+            <DayHeader>
+              <Typography variant="body1">{day}</Typography>
+            </DayHeader>
+            {/* Time slots grid */}
+            {Array.from({ length: END_TIME - START_TIME }, (_, i) => (
+              <TimeSlot key={i} />
+            ))}
+            
+            {/* Class blocks rendered on top of the grid */}
+            {roomClasses
+              .filter(c => c.days.includes(day))
+              .map((classItem) => {
+                const { top, height } = getClassPosition(classItem);
+                return (
+                  <ClassBlock
+                    key={classItem.id}
+                    sx={{
+                      top: `${top}px`,
+                      height: `${height}px`,
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      {classItem.courseCode} {classItem.courseNumber}
+                    </Typography>
+                    <Typography variant="caption" display="block">
+                      {classItem.instructor}
+                    </Typography>
+                    <Typography variant="caption" display="block">
+                      {classItem.startTime} - {classItem.endTime}
+                    </Typography>
+                  </ClassBlock>
+                );
+              })}
           </Box>
         ))}
-        {/* Placeholder boxes to maintain column width */}
-        {Array.from({ length: END_TIME - START_TIME }, (_, i) => (
-          <Box key={i} sx={{ height: '57px', width: '80px' }} />
-        ))}
       </Box>
-
-      {/* Days columns */}
-      {DAYS.map((day) => (
-        <Box key={day} sx={{ flex: 1, position: 'relative' }}>
-          <DayHeader>
-            <Typography variant="body1">{day}</Typography>
-          </DayHeader>
-          {/* Time slots grid */}
-          {Array.from({ length: END_TIME - START_TIME }, (_, i) => (
-            <TimeSlot key={i} />
-          ))}
-          
-          {/* Class blocks rendered on top of the grid */}
-          {roomClasses
-            .filter(c => c.days.includes(day))
-            .map((classItem) => {
-              const { top, height } = getClassPosition(classItem);
-              return (
-                <ClassBlock
-                  key={classItem.id}
-                  sx={{
-                    top: `${top}px`,
-                    height: `${height}px`,
-                  }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                    {classItem.courseCode} {classItem.courseNumber}
-                  </Typography>
-                  <Typography variant="caption" display="block">
-                    {classItem.instructor}
-                  </Typography>
-                  <Typography variant="caption" display="block">
-                    {classItem.startTime} - {classItem.endTime}
-                  </Typography>
-                </ClassBlock>
-              );
-            })}
-        </Box>
-      ))}
     </Box>
   );
 };

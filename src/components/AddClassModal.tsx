@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, MouseEvent } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { Room } from '../context/AppContext';
 import {
   Dialog,
   DialogTitle,
@@ -23,13 +24,31 @@ import {
 } from '@mui/material';
 import { LocalizationProvider, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
+interface AddClassModalProps {
+  open: boolean;
+  onClose: () => void;
+  rooms: Room[];
+  semesterId: string;
+}
+
+interface ClassEntry {
+  courseCode: string;
+  courseNumber: string;
+  section: string;
+  instructor: string;
+  roomId: string;
+  startTime: string;
+  endTime: string;
+  days: string[];
+}
+
+const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps) => {
   const { addClass, checkRoomAvailability } = useAppContext();
-  const [classEntries, setClassEntries] = useState([{ 
+  const [classEntries, setClassEntries] = useState<ClassEntry[]>([{ 
     courseCode: '', 
     courseNumber: '', 
     section: '', 
@@ -39,14 +58,13 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
     endTime: '', 
     days: [] 
   }]);
-  const [error, setError] = useState('');
-  const [availableRoomsMap, setAvailableRoomsMap] = useState({});
+  const [error, setError] = useState<string>('');
+  const [availableRoomsMap, setAvailableRoomsMap] = useState<Record<number, Room[]>>({});
 
-  const formatTime = (time) => (time ? time.format('h:mmA') : '');
+  const formatTime = (time: Dayjs | null): string => (time ? time.format('h:mmA') : '');
 
-  // Update available rooms when time or days change for any entry
   useEffect(() => {
-    const newAvailableRoomsMap = {};
+    const newAvailableRoomsMap: Record<number, Room[]> = {};
     
     classEntries.forEach((entry, index) => {
       if (entry.startTime && entry.endTime && entry.days && entry.days.length > 0) {
@@ -76,13 +94,13 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
     }]);
   };
 
-  const handleRemoveRow = (index) => {
+  const handleRemoveRow = (index: number) => {
     if (classEntries.length > 1) {
       setClassEntries(classEntries.filter((_, i) => i !== index));
     }
   };
 
-  const handleEntryChange = (index, field, value) => {
+  const handleEntryChange = (index: number, field: keyof ClassEntry, value: string | string[]) => {
     const updatedEntries = [...classEntries];
     updatedEntries[index] = {
       ...updatedEntries[index],
@@ -91,14 +109,12 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
     setClassEntries(updatedEntries);
   };
 
-  // Validate time format (e.g., 9:00AM or 2:30PM)
-  const validateTimeFormat = (time) => {
+  const validateTimeFormat = (time: string): boolean => {
     const timeRegex = /^(1[0-2]|0?[1-9]):([0-5][0-9])([AP]M)$/i;
     return timeRegex.test(time);
   };
 
-  // Check Tuesday/Thursday restriction (no classes from 2:00PM to 4:00PM)
-  const validateTuesdayThursdayRestriction = (days, startTime, endTime) => {
+  const validateTuesdayThursdayRestriction = (days: string[], startTime: string, endTime: string): { valid: boolean; message?: string } => {
     if (!validateTimeFormat(startTime) || !validateTimeFormat(endTime)) {
       return { valid: false, message: 'Invalid time format. Please use format like 9:00AM or 2:30PM.' };
     }
@@ -109,7 +125,6 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
       const restrictedStart = dayjs('2:00PM', 'h:mmA');
       const restrictedEnd = dayjs('4:00PM', 'h:mmA');
       
-      // Check if class time overlaps with restricted time (2:00PM-4:00PM)
       const overlapsRestrictedTime = 
         (start.isBefore(restrictedEnd) && end.isAfter(restrictedStart)) ||
         start.isSame(restrictedStart) || 
@@ -124,7 +139,6 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
   };
 
   const handleSave = () => {
-    // Validate all entries
     for (let i = 0; i < classEntries.length; i++) {
       const entry = classEntries[i];
       if (!entry.courseCode || !entry.courseNumber || !entry.section || 
@@ -134,22 +148,19 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
         return;
       }
 
-      // Validate time format
       if (!validateTimeFormat(entry.startTime) || !validateTimeFormat(entry.endTime)) {
         setError(`Invalid time format for class ${i + 1}. Please use format like 9:00AM or 2:30PM.`);
         return;
       }
 
-      // Check Tuesday/Thursday restriction
       const validationResult = validateTuesdayThursdayRestriction(entry.days, entry.startTime, entry.endTime);
-      if (!validationResult.valid) {
+      if (!validationResult.valid && validationResult.message) {
         setError(`Class ${i + 1}: ${validationResult.message}`);
         return;
       }
     }
 
     try {
-      // Add all classes
       classEntries.forEach(entry => {
         addClass({
           semesterId,
@@ -168,6 +179,11 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add classes');
     }
+  };
+
+  const handleDaysChange = (_: MouseEvent<HTMLElement>, newDays: string[]) => {
+    const index = parseInt(_.currentTarget.getAttribute('data-index') || '0');
+    handleEntryChange(index, 'days', newDays);
   };
 
   return (
@@ -239,8 +255,8 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
                         value={entry.roomId} 
                         onChange={(e) => handleEntryChange(index, 'roomId', e.target.value)}
                         fullWidth
-                        disabled={noRoomsAvailable}
-                        error={noRoomsAvailable}
+                        disabled={Boolean(noRoomsAvailable)}
+                        error={Boolean(noRoomsAvailable)}
                       >
                         {availableRooms.map((room) => (
                           <MenuItem key={room.id} value={room.id}>Room {room.roomNumber}</MenuItem>
@@ -253,9 +269,9 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }) => {
                     <TableCell>
                       <ToggleButtonGroup 
                         size="small" 
-                        value={entry.days} 
-                        onChange={(_, newDays) => handleEntryChange(index, 'days', newDays)}
-                        multiple
+                        value={entry.days}
+                        onChange={handleDaysChange}
+                        data-index={index}
                       >
                         <ToggleButton value="Monday">M</ToggleButton>
                         <ToggleButton value="Tuesday">T</ToggleButton>

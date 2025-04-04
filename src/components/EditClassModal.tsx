@@ -93,7 +93,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
     }
   }, [open, classData]);
 
-  const handleDaysChange = (event: React.MouseEvent<HTMLElement>, newDays: string[]) => {
+  const handleDaysChange = (_: React.MouseEvent<HTMLElement>, newDays: string[]) => {
     setDays(newDays);
   };
 
@@ -109,7 +109,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
   };
 
   // Check Tuesday/Thursday restriction (no classes from 2:00PM to 4:00PM)
-  const validateTuesdayThursdayRestriction = (days: string[], startTime: string, endTime: string) => {
+  const validateTuesdayThursdayRestriction = (days: string[], startTime: string, endTime: string): { valid: boolean; message?: string } => {
     if (!validateTimeFormat(startTime) || !validateTimeFormat(endTime)) {
       return { valid: false, message: 'Invalid time format. Please use format like 9:00AM or 2:30PM.' };
     }
@@ -152,7 +152,7 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
     // Check Tuesday/Thursday restriction
     const validationResult = validateTuesdayThursdayRestriction(days, formattedStartTime, formattedEndTime);
     if (!validationResult.valid) {
-      setError(validationResult.message);
+      setError(validationResult.message || 'Invalid time slot selected');
       return;
     }
 
@@ -261,13 +261,13 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
             <TimePicker
               label="Start Time"
               value={startTime}
-              onChange={(newValue) => setStartTime(newValue)}
+              onChange={(newValue: dayjs.Dayjs | null) => setStartTime(newValue)}
               sx={{ width: '48%' }}
             />
             <TimePicker
               label="End Time"
               value={endTime}
-              onChange={(newValue) => setEndTime(newValue)}
+              onChange={(newValue: dayjs.Dayjs | null) => setEndTime(newValue)}
               sx={{ width: '48%' }}
             />
           </LocalizationProvider>

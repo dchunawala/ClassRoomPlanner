@@ -11,7 +11,7 @@ interface Semester {
   isStarred: boolean;
 }
 
-interface Room {
+export interface Room {
   id: string;
   semesterId: string;
   roomNumber: string;
