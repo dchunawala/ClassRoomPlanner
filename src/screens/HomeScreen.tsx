@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
 import {
   Typography,
-  Grid,
-  Card,
-  CardContent,
   Button,
   Box,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { useAppContext } from '../context/AppContext';
 import AddSemesterModal from '../components/AddSemesterModal';
 import SemesterList from '../components/SemesterList';
 
 const HomeScreen: React.FC = () => {
-  const { semesters, rooms, classes } = useAppContext();
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
 
   const handleAddSemesterClick = (e: React.MouseEvent) => {
@@ -25,10 +20,6 @@ const HomeScreen: React.FC = () => {
   const handleModalClose = () => {
     setIsAddModalOpen(false);
   };
-
-  const starredSemesters = semesters.filter(sem => sem.isStarred).length;
-  const totalRooms = rooms.length;
-  const totalClasses = classes.length;
 
   return (
     <Box>
