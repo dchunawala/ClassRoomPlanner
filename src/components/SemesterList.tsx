@@ -27,6 +27,8 @@ const SemesterList: React.FC = () => {
   const [startDate, setStartDate] = useState<dayjs.Dayjs | null>(null);
   const [endDate, setEndDate] = useState<dayjs.Dayjs | null>(null);
   const [error, setError] = useState<string>('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [semesterToDelete, setSemesterToDelete] = useState<any>(null);
 
   const handleSemesterClick = (id: string) => {
     navigate(`/semester/${id}`);

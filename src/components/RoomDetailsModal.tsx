@@ -26,8 +26,8 @@ const RoomDetailsModal: React.FC<RoomDetailsModalProps> = ({ open, onClose, room
       fullWidth
     >
       <DialogTitle>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">
+        <Box display="flex" justifyContent="center" alignItems="center" sx={{ pr: 6 }}>
+          <Typography variant="h6" sx={{ textAlign: 'center' }}>
             Room {room.roomNumber} Schedule
           </Typography>
           <IconButton
