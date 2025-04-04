@@ -14,7 +14,7 @@ import {
   Paper,
   Alert,
 } from '@mui/material';
-import { Star as StarIcon, StarBorder as StarBorderIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Star as StarIcon, StarBorder as StarBorderIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useAppContext } from '../context/AppContext';
@@ -22,7 +22,7 @@ import dayjs from 'dayjs';
 
 const SemesterList: React.FC = () => {
   const navigate = useNavigate();
-  const { semesters, toggleSemesterStar, editSemesterDates } = useAppContext();
+  const { semesters, toggleSemesterStar, editSemesterDates, deleteSemester } = useAppContext();
   const [editingSemester, setEditingSemester] = useState<any>(null);
   const [startDate, setStartDate] = useState<dayjs.Dayjs | null>(null);
   const [endDate, setEndDate] = useState<dayjs.Dayjs | null>(null);
@@ -146,6 +146,19 @@ const SemesterList: React.FC = () => {
                       <StarBorderIcon />
                     )}
                   </IconButton>
+                  <IconButton
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSemesterToDelete(semester);
+                      setDeleteDialogOpen(true);
+                    }}
+                    title="Delete semester"
+                    size="small"
+                    color="error"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
                 </Box>
               </ListItem>
             ))}
@@ -201,6 +214,59 @@ const SemesterList: React.FC = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSaveEdit} variant="contained" color="primary">
             Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setSemesterToDelete(null);
+          setError('');
+        }}
+      >
+        <DialogTitle>Delete Semester</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete {semesterToDelete?.name} {semesterToDelete?.year}?
+            This will also delete all rooms and classes associated with this semester.
+            This action cannot be undone.
+          </Typography>
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setSemesterToDelete(null);
+              setError('');
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              try {
+                if (semesterToDelete) {
+                  deleteSemester(semesterToDelete.id);
+                  setDeleteDialogOpen(false);
+                  setSemesterToDelete(null);
+                  setError('');
+                }
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to delete semester');
+              }
+            }}
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
