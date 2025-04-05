@@ -212,7 +212,7 @@ const RoomCalendarView: React.FC<RoomCalendarViewProps> = ({ roomId }) => {
                     }}
                   >
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      {classItem.courseCode} {classItem.courseNumber}
+                      {classItem.courseCode}-{classItem.courseNumber}-{classItem.section}
                     </Typography>
                     <Typography variant="caption" display="block">
                       {classItem.instructor}

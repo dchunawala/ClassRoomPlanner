@@ -1,6 +1,6 @@
 import { useState, useEffect, MouseEvent } from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Room } from '../context/AppContext';
+import { Room, Class } from '../context/AppContext';
 import {
   Dialog,
   DialogTitle,
@@ -33,31 +33,64 @@ interface AddClassModalProps {
   onClose: () => void;
   rooms: Room[];
   semesterId: string;
+  classToClone: Class | null;
 }
 
 interface ClassEntry {
   courseCode: string;
   courseNumber: string;
+  classCode: string;
   section: string;
+  className: string;
   instructor: string;
   roomId: string;
   startTime: string;
   endTime: string;
   days: string[];
+  studentCount: string;
+  students: string;
 }
 
-const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps) => {
+const AddClassModal = ({ open, onClose, rooms, semesterId, classToClone }: AddClassModalProps) => {
   const { addClass, checkRoomAvailability } = useAppContext();
-  const [classEntries, setClassEntries] = useState<ClassEntry[]>([{ 
-    courseCode: '', 
-    courseNumber: '', 
-    section: '', 
-    instructor: '', 
-    roomId: '', 
-    startTime: '', 
-    endTime: '', 
-    days: [] 
-  }]);
+  const defaultEntry = {
+    courseCode: '',
+    courseNumber: '',
+    classCode: '',
+    section: '',
+    className: '',
+    instructor: '',
+    roomId: '',
+    startTime: '',
+    endTime: '',
+    days: [],
+    studentCount: '',
+    students: '',
+  };
+
+  const [classEntries, setClassEntries] = useState<ClassEntry[]>([defaultEntry]);
+
+  useEffect(() => {
+    if (classToClone) {
+      setClassEntries([{
+        courseCode: classToClone.courseCode,
+        courseNumber: classToClone.courseNumber,
+        classCode: classToClone.classCode,
+        section: classToClone.section,
+        className: classToClone.className,
+        instructor: classToClone.instructor,
+        roomId: classToClone.roomId,
+        startTime: classToClone.startTime,
+        endTime: classToClone.endTime,
+        days: classToClone.days,
+        studentCount: classToClone.studentCount,
+        students: '',
+      }]);
+    } else {
+      setClassEntries([defaultEntry]);
+    }
+  }, [classToClone]);
+
   const [error, setError] = useState<string>('');
   const [availableRoomsMap, setAvailableRoomsMap] = useState<Record<number, Room[]>>({});
 
@@ -67,10 +100,12 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps)
     const newAvailableRoomsMap: Record<number, Room[]> = {};
     
     classEntries.forEach((entry, index) => {
-      if (entry.startTime && entry.endTime && entry.days && entry.days.length > 0) {
+      if (entry.startTime && entry.endTime && entry.days && entry.days.length > 0 && entry.studentCount) {
         const filteredRooms = rooms.filter(room => {
           const availability = checkRoomAvailability(room.id, entry.startTime, entry.endTime, entry.days);
-          return availability.available;
+          const studentCount = parseInt(entry.studentCount);
+          const capacityCheck = isNaN(studentCount) || room.capacity >= studentCount;
+          return availability.available && capacityCheck;
         });
         newAvailableRoomsMap[index] = filteredRooms;
       } else {
@@ -82,15 +117,19 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps)
   }, [classEntries, rooms, checkRoomAvailability]);
 
   const handleAddRow = () => {
-    setClassEntries([...classEntries, { 
-      courseCode: '', 
-      courseNumber: '', 
-      section: '', 
-      instructor: '', 
-      roomId: '', 
-      startTime: '', 
-      endTime: '', 
-      days: [] 
+    setClassEntries([...classEntries, {
+      courseCode: '',
+      courseNumber: '',
+      classCode: '',
+      section: '',
+      className: '',
+      instructor: '',
+      roomId: '',
+      startTime: '',
+      endTime: '',
+      days: [],
+      studentCount: '',
+      students: '',
     }]);
   };
 
@@ -141,8 +180,8 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps)
   const handleSave = () => {
     for (let i = 0; i < classEntries.length; i++) {
       const entry = classEntries[i];
-      if (!entry.courseCode || !entry.courseNumber || !entry.section || 
-          !entry.instructor || !entry.roomId || !entry.startTime || 
+      if (!entry.courseCode || !entry.courseNumber || !entry.section ||
+          !entry.instructor || !entry.className || !entry.classCode || !entry.studentCount || !entry.roomId || !entry.startTime ||
           !entry.endTime || entry.days.length === 0) {
         setError(`Please fill in all fields for class ${i + 1}`);
         return;
@@ -171,7 +210,10 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps)
           roomId: entry.roomId,
           startTime: entry.startTime,
           endTime: entry.endTime,
-          days: entry.days
+          days: entry.days,
+          studentCount: entry.studentCount,
+          className: entry.className,
+          classCode: entry.classCode
         });
       });
       
@@ -199,10 +241,14 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps)
                 <TableCell>Course Number</TableCell>
                 <TableCell>Section</TableCell>
                 <TableCell>Instructor</TableCell>
+                <TableCell>Students</TableCell>
+                <TableCell>Class Name</TableCell>
+                <TableCell>Class Code</TableCell>
                 <TableCell>Room</TableCell>
                 <TableCell>Days</TableCell>
                 <TableCell>Start Time</TableCell>
                 <TableCell>End Time</TableCell>
+                <TableCell>Student Count</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -217,42 +263,68 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps)
                 return (
                   <TableRow key={index}>
                     <TableCell>
-                      <TextField 
-                        size="small" 
-                        value={entry.courseCode} 
-                        onChange={(e) => handleEntryChange(index, 'courseCode', e.target.value)}
-                        fullWidth 
-                      />
+                      <TextField
+                                              size="small"
+                                              value={entry.courseCode}
+                                              onChange={(e) => handleEntryChange(index, 'courseCode', e.target.value)}
+                                              fullWidth
+                                              inputProps={{ maxLength: 5 }}
+                                            />
                     </TableCell>
                     <TableCell>
-                      <TextField 
-                        size="small" 
-                        value={entry.courseNumber} 
-                        onChange={(e) => handleEntryChange(index, 'courseNumber', e.target.value)}
-                        fullWidth 
-                      />
+                      <TextField
+                                              size="small"
+                                              value={entry.courseNumber}
+                                              onChange={(e) => handleEntryChange(index, 'courseNumber', e.target.value)}
+                                              fullWidth
+                                              inputProps={{ maxLength: 5 }}
+                                            />
                     </TableCell>
                     <TableCell>
-                      <TextField 
-                        size="small" 
-                        value={entry.section} 
-                        onChange={(e) => handleEntryChange(index, 'section', e.target.value)}
-                        fullWidth 
-                      />
+                      <TextField
+                                              size="small"
+                                              value={entry.section}
+                                              onChange={(e) => handleEntryChange(index, 'section', e.target.value)}
+                                              fullWidth
+                                              inputProps={{ maxLength: 5 }}
+                                            />
                     </TableCell>
                     <TableCell>
-                      <TextField 
-                        size="small" 
-                        value={entry.instructor} 
+                      <TextField
+                        size="small"
+                        value={entry.instructor}
                         onChange={(e) => handleEntryChange(index, 'instructor', e.target.value)}
-                        fullWidth 
+                        fullWidth
                       />
                     </TableCell>
                     <TableCell>
-                      <TextField 
-                        select 
-                        size="small" 
-                        value={entry.roomId} 
+                      <TextField
+                        size="small"
+                        value={entry.students}
+                        onChange={(e) => handleEntryChange(index, 'students', e.target.value)}
+                        fullWidth
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        size="small"
+                        value={entry.className}
+                        onChange={(e) => handleEntryChange(index, 'className', e.target.value)}
+                        fullWidth
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        size="small"
+                        value={entry.classCode}
+                        onChange={(e) => handleEntryChange(index, 'classCode', e.target.value)}
+                        fullWidth
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        size="small"
+                        value={entry.roomId}
                         onChange={(e) => handleEntryChange(index, 'roomId', e.target.value)}
                         fullWidth
                         disabled={Boolean(noRoomsAvailable)}
@@ -267,8 +339,8 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps)
                       )}
                     </TableCell>
                     <TableCell>
-                      <ToggleButtonGroup 
-                        size="small" 
+                      <ToggleButtonGroup
+                        size="small"
                         value={entry.days}
                         onChange={handleDaysChange}
                         data-index={index}
@@ -282,23 +354,31 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps)
                     </TableCell>
                     <TableCell>
                       <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <TimePicker 
-                          value={entry.startTime ? dayjs(entry.startTime, 'h:mmA') : null} 
+                        <TimePicker
+                          value={entry.startTime ? dayjs(entry.startTime, 'h:mmA') : null}
                           onChange={(newValue) => handleEntryChange(index, 'startTime', formatTime(newValue))}
-                          ampm 
-                          slotProps={{ textField: { size: 'small', fullWidth: true } }} 
+                          ampm
+                          slotProps={{ textField: { size: 'small', fullWidth: true } }}
                         />
                       </LocalizationProvider>
                     </TableCell>
                     <TableCell>
                       <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <TimePicker 
-                          value={entry.endTime ? dayjs(entry.endTime, 'h:mmA') : null} 
+                        <TimePicker
+                          value={entry.endTime ? dayjs(entry.endTime, 'h:mmA') : null}
                           onChange={(newValue) => handleEntryChange(index, 'endTime', formatTime(newValue))}
-                          ampm 
-                          slotProps={{ textField: { size: 'small', fullWidth: true } }} 
+                          ampm
+                          slotProps={{ textField: { size: 'small', fullWidth: true } }}
                         />
                       </LocalizationProvider>
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        size="small"
+                        value={entry.studentCount}
+                        onChange={(e) => handleEntryChange(index, 'studentCount', e.target.value)}
+                        fullWidth
+                      />
                     </TableCell>
                     <TableCell>
                       <IconButton size="small" onClick={() => handleRemoveRow(index)} disabled={classEntries.length === 1}>
@@ -309,7 +389,7 @@ const AddClassModal = ({ open, onClose, rooms, semesterId }: AddClassModalProps)
                 );
               })}
               <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ padding: '12px' }}>
+                <TableCell colSpan={7} align="center" sx={{ padding: '12px' }}>
                   <Button startIcon={<AddIcon />} onClick={handleAddRow} variant="outlined" size="small">
                     Add Another Class
                   </Button>

@@ -29,6 +29,9 @@ export interface Class {
   startTime: string;
   endTime: string;
   days: string[];
+  studentCount: string;
+  className: string;
+  classCode: string;
 }
 
 interface AppContextType {
@@ -45,7 +48,7 @@ interface AppContextType {
   addClass: (classData: Omit<Class, 'id'>) => void;
   editClass: (id: string, classData: Omit<Class, 'id'>) => void;
   deleteClass: (id: string) => void;
-  checkRoomAvailability: (roomId: string, startTime: string, endTime: string, days: string[], excludeClassId?: string) => 
+  checkRoomAvailability: (roomId: string, startTime: string, endTime: string, days: string[], excludeClassId?: string) =>
     { available: boolean; conflict?: string };
   checkScheduleConflict: (classData: Omit<Class, 'id'>) => 
     { conflict: boolean; conflictingClass?: string };
@@ -272,8 +275,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     const newClass: Class = {
-      ...classData,
-      id: Math.random().toString(36).substr(2, 9)
+      id: Math.random().toString(36).substr(2, 9),
+      semesterId: classData.semesterId,
+      roomId: classData.roomId,
+      courseCode: classData.courseCode,
+      courseNumber: classData.courseNumber,
+      section: classData.section,
+      instructor: classData.instructor,
+      startTime: classData.startTime,
+      endTime: classData.endTime,
+      days: classData.days,
+      studentCount: classData.studentCount,
+      className: classData.className,
+      classCode: classData.classCode
     };
     setClasses([...classes, newClass]);
   };
@@ -303,9 +317,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
 
     const updatedClasses = [...classes];
-    updatedClasses[classIndex] = {
-      ...updatedClasses[classIndex],
-      ...classData
+    updatedClasses[classIndex] =  {
+      id: updatedClasses[classIndex].id,
+      semesterId: classData.semesterId,
+      roomId: classData.roomId,
+      courseCode: classData.courseCode,
+      courseNumber: classData.courseNumber,
+      section: classData.section,
+      instructor: classData.instructor,
+      startTime: classData.startTime,
+      endTime: classData.endTime,
+      days: classData.days,
+      studentCount: classData.studentCount,
+      className: classData.className,
+      classCode: classData.classCode
     };
     setClasses(updatedClasses);
     return updatedClasses[classIndex];
