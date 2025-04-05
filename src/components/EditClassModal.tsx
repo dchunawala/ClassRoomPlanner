@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Grid, // Import Grid
   Dialog,
   DialogTitle,
   DialogContent,
@@ -190,52 +191,64 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-          <TextField
-            label="Course Code"
-            value={courseCode}
-            onChange={(e) => setCourseCode(e.target.value)}
-            sx={{ width: '30%' }}
-          />
-          <TextField
-            label="Course Number"
-            value={courseNumber}
-            onChange={(e) => setCourseNumber(e.target.value)}
-            sx={{ width: '30%' }}
-          />
-          <TextField
-            label="Section"
-            value={section}
-            onChange={(e) => setSection(e.target.value)}
-            sx={{ width: '30%' }}
-          />
-          <TextField
-            label="Instructor"
-            value={instructor}
-            onChange={(e) => setInstructor(e.target.value)}
-            sx={{ width: '100%' }}
-          />
+        <Grid container spacing={0} mt={2} sx={{  alignItems: 'center' }}>
+          <Grid item xs={12} sm={3} sx={{ display: 'flex', alignItems: 'center' }}>
+            <TextField
+              fullWidth
+              label="Course Code"
+              value={courseCode}
+              onChange={(e) => setCourseCode(e.target.value)}
+              sx={{ mt: 0 }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={3} sx={{ display: 'flex', alignItems: 'center' }}>
+            <TextField
+              fullWidth
+              label="Course Number"
+              value={courseNumber}
+              onChange={(e) => setCourseNumber(e.target.value)}
+              sx={{ mt: 0 }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Section"
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Instructor"
+              value={instructor}
+              onChange={(e) => setInstructor(e.target.value)}
+            />
+          </Grid>
 
-          <FormControl sx={{ width: '100%' }}>
-            <InputLabel>Room</InputLabel>
-            <Select
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
-              label="Room"
-              error={availableRooms.length === 0 && startTime !== null && endTime !== null && days.length > 0}
-            >
-              {availableRooms.map((room) => (
-                <MenuItem key={room.id} value={room.id}>
-                  Room {room.roomNumber} (Capacity: {room.capacity})
-                </MenuItem>
-              ))}
-            </Select>
-            {availableRooms.length === 0 && startTime !== null && endTime !== null && days.length > 0 && (
-              <FormHelperText error>No rooms available for selected time slot</FormHelperText>
-            )}
-          </FormControl>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel>Room</InputLabel>
+              <Select
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+                label="Room"
+                error={availableRooms.length === 0 && startTime !== null && endTime !== null && days.length > 0}
+              >
+                {availableRooms.map((room) => (
+                  <MenuItem key={room.id} value={room.id}>
+                    Room {room.roomNumber} (Capacity: {room.capacity})
+                  </MenuItem>
+                ))}
+              </Select>
+              {availableRooms.length === 0 && startTime !== null && endTime !== null && days.length > 0 && (
+                <FormHelperText error>No rooms available for selected time slot</FormHelperText>
+              )}
+            </FormControl>
+          </Grid>
 
-          <Box sx={{ width: '100%', mt: 2 }}>
+          <Grid item xs={12}> {/* Days Grid item spans all columns */}
             <InputLabel sx={{ mb: 1 }}>Days</InputLabel>
             <ToggleButtonGroup
               value={days}
@@ -261,23 +274,25 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
                 Friday
               </ToggleButton>
             </ToggleButtonGroup>
-          </Box>
+          </Grid>
 
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <TimePicker
-              label="Start Time"
-              value={startTime}
-              onChange={(newValue: dayjs.Dayjs | null) => setStartTime(newValue)}
-              sx={{ width: '48%' }}
-            />
-            <TimePicker
-              label="End Time"
-              value={endTime}
-              onChange={(newValue: dayjs.Dayjs | null) => setEndTime(newValue)}
-              sx={{ width: '48%' }}
-            />
-          </LocalizationProvider>
-        </Box>
+          <Grid item xs={12}> {/* TimePickers Grid item spans all columns */}
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <TimePicker
+                  label="Start Time"
+                  value={startTime}
+                  onChange={(newValue: dayjs.Dayjs | null) => setStartTime(newValue)}
+                />
+                <TimePicker
+                  label="End Time"
+                  value={endTime}
+                  onChange={(newValue: dayjs.Dayjs | null) => setEndTime(newValue)}
+                />
+              </Box>
+            </LocalizationProvider>
+          </Grid>
+        </Grid>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>

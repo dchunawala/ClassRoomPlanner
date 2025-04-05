@@ -217,7 +217,7 @@ const SemesterDetailsScreen: React.FC = () => {
       const roomMatch = roomNumber.toLowerCase().includes(roomSearch.toLowerCase());
       const scheduleString = `${cls.days?.join('')} ${cls.startTime}-${cls.endTime}`.toLowerCase();
       const scheduleMatch = scheduleString.includes(scheduleSearch.toLowerCase().replace(/,/g, ''));
-      const studentsMatch = studentsSearch === '' || cls.studentCount.toString().includes(studentsSearch);
+      const studentsMatch = studentsSearch === '' || cls.studentCount.toString().includes(studentsSearch); // Added studentsMatch
 
       const capacityFilterMatch = !isCapacitySearchValid || roomCapacity >= searchCapacityNum;
 
@@ -228,9 +228,9 @@ const SemesterDetailsScreen: React.FC = () => {
              roomMatch &&
              scheduleMatch &&
              capacityFilterMatch &&
-             studentsMatch;
+             studentsMatch; // Added studentsMatch to return
     });
-  }, [semesterClasses, rooms, courseCodeSearch, courseNumberSearch, sectionSearch, instructorSearch, roomSearch, scheduleSearch, searchCapacityNum, studentsSearch]);
+  }, [semesterClasses, rooms, courseCodeSearch, courseNumberSearch, sectionSearch, instructorSearch, roomSearch, scheduleSearch, searchCapacityNum, studentsSearch]); // Added studentsSearch to dependencies
   // --- End Filtered Data ---
 
 
@@ -376,7 +376,7 @@ const SemesterDetailsScreen: React.FC = () => {
                             // --- End Cancel Logic ---
                           }}
                           aria-label="cancel edit"
-                        >
+                          >
                           <CancelIcon />
                         </IconButton>
                       </TableCell>
@@ -589,26 +589,29 @@ const SemesterDetailsScreen: React.FC = () => {
             </TableHead>
             <TableBody>
               {/* Use filteredClasses */}
+              
               {filteredClasses.map((cls) => (
                 <TableRow key={cls.id} hover>
                   {editingClassId === cls.id ? (
                     // Editable row
                     <>
                       <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
                           <TextField
                             size="small"
+                            label="Course Code"
                             value={editedClass.courseCode}
                             onChange={(e) => setEditedClass({ ...editedClass, courseCode: e.target.value })}
-                            sx={{ width: '50%' }}
+                            fullWidth
                           />
-                          <TextField
+                      </TableCell>
+                      <TableCell>
+                         <TextField
                             size="small"
+                            label="Course Number"
                             value={editedClass.courseNumber}
                             onChange={(e) => setEditedClass({ ...editedClass, courseNumber: e.target.value })}
-                            sx={{ width: '50%' }}
+                            fullWidth
                           />
-                        </Box>
                       </TableCell>
                       <TableCell>
                         <TextField
@@ -630,7 +633,7 @@ const SemesterDetailsScreen: React.FC = () => {
                         <TextField
                           size="small"
                           value={editedClass.studentCount}
-                          onChange={(e) => setEditedClass({ ...editedClass, instructor: e.target.value })}
+                          onChange={(e) => setEditedClass({ ...editedClass, studentCount: e.target.value })}
                           fullWidth
                         />
                       </TableCell>
@@ -645,7 +648,6 @@ const SemesterDetailsScreen: React.FC = () => {
                             {semesterRooms
                               .map((room) => (
                                 <MenuItem key={room.id} value={room.id}>
-                                  {/* Removed "Room " prefix */}
                                   {room.roomNumber}
                                 </MenuItem>
                               ))}
@@ -655,6 +657,39 @@ const SemesterDetailsScreen: React.FC = () => {
                             <FormHelperText error>Room not available for selected time</FormHelperText>
                           )}
                         </FormControl>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <ToggleButtonGroup
+                            size="small"
+                            value={editedClass.days}
+                            onChange={(_, newDays) => setEditedClass({ ...editedClass, days: newDays })}
+                            aria-label="days"
+                            sx={{ width: '100%' }}
+                          >
+                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
+                              <ToggleButton key={day} value={day} aria-label={day}>
+                                {day.charAt(0)}
+                              </ToggleButton>
+                            ))}
+                          </ToggleButtonGroup>
+                          <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <TimePicker
+                                label="Start Time"
+                                value={editedClass.startTime ? dayjs(editedClass.startTime, 'h:mmA') : null}
+                                onChange={(newValue) => setEditedClass({ ...editedClass, startTime: formatTime(newValue as dayjs.Dayjs | null) })}
+                                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                              />
+                              <TimePicker
+                                label="End Time"
+                                value={editedClass.endTime ? dayjs(editedClass.endTime, 'h:mmA') : null}
+                                onChange={(newValue) => setEditedClass({ ...editedClass, endTime: formatTime(newValue as dayjs.Dayjs | null) })}
+                                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                              />
+                            </Box>
+                          </LocalizationProvider>
+                        </Box>
                       </TableCell>
                       <TableCell align="center">
                         <IconButton
@@ -731,9 +766,9 @@ const SemesterDetailsScreen: React.FC = () => {
                           <Box>{cls.startTime} - {cls.endTime}</Box>
                         </Box>
                       </TableCell>
-                      <TableCell align="center">
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                          <IconButton
+                      <TableCell>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 1 }}>
+                          <ToggleButtonGroup
                             size="small"
                             color="primary"
                             onClick={() => {
@@ -756,7 +791,7 @@ const SemesterDetailsScreen: React.FC = () => {
                             aria-label="edit class"
                           >
                             <EditIcon />
-                          </IconButton>
+                          </ToggleButtonGroup>
                           <IconButton
                             size="small"
                             color="info"
@@ -797,151 +832,151 @@ const SemesterDetailsScreen: React.FC = () => {
                   )}
                 </TableRow>
               ))}
-              {/* --- Add Class Row (Restored) --- */}
+              
               <TableRow>
-                <TableCell>
-                  <TextField
-                    size="small"
-                    placeholder="Course Code"
-                    value={newClass.courseCode}
-                    onChange={(e) => setNewClass({ ...newClass, courseCode: e.target.value })}
-                    fullWidth
-                    inputProps={{ maxLength: 6 }}
-                  />
-                </TableCell>
-                  <TableCell>
-                    <TextField
-                      size="small"
-                      placeholder="Course Number"
-                      value={newClass.courseNumber}
-                      onChange={(e) => setNewClass({ ...newClass, courseNumber: e.target.value })}
-                      fullWidth
-                      inputProps={{ maxLength: 6 }}
-                    />
-                  </TableCell>
-                   <TableCell>
-                     <TextField
-                       size="small"
-                       placeholder="Section"
-                       value={newClass.section}
-                       onChange={(e) => setNewClass({ ...newClass, section: e.target.value })}
-                       fullWidth
-                     />
-                   </TableCell>
-                   <TableCell>
-                     <TextField
-                       size="small"
-                       placeholder="Instructor"
-                       value={newClass.instructor}
-                       onChange={(e) => setNewClass({ ...newClass, instructor: e.target.value })}
-                       fullWidth
-                     />
-                   </TableCell>
-                    <TableCell>
-                      <TextField
-                        size="small"
-                        placeholder="Students"
-                        value={newClass.studentCount}
-                        onChange={(e) => setNewClass({ ...newClass, studentCount: e.target.value })}
-                        fullWidth
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <FormControl fullWidth size="small">
-                        <Select
-                          displayEmpty
-                          value={newClass.roomId}
-                          onChange={(e) => setNewClass({ ...newClass, roomId: e.target.value })}
-                          renderValue={(selected) => {
-                            if (!selected) {
-                              return <em style={{ color: 'grey' }}>Select Room</em>;
-                            }
-                            const room = semesterRooms.find(r => r.id === selected);
-                            return room?.roomNumber;
-                          }}
-                          error={Boolean(newClass.roomId && newClass.startTime && newClass.endTime && newClass.days.length > 0 &&
-                            !checkRoomAvailability(newClass.roomId, newClass.startTime, newClass.endTime, newClass.days).available)}
-                        >
-                          <MenuItem disabled value="">
-                            <em>Select Room</em>
-                          </MenuItem>
-                          {semesterRooms.map((room) => (
-                            <MenuItem key={room.id} value={room.id}>
-                              {room.roomNumber}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </TableCell>
-                               <TableCell>
-                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                   <ToggleButtonGroup
-                                     size="small"
-                                     value={newClass.days}
-                                     onChange={(_, newDays) => setNewClass({ ...newClass, days: newDays })}
-                                     aria-label="days"
-                                   >
-                                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
-                                       <ToggleButton key={day} value={day} aria-label={day}>
-                                         {day.charAt(0)}
-                                       </ToggleButton>
-                                     ))}
-                                   </ToggleButtonGroup>
-                                   <Box sx={{ display: 'flex', gap: 1 }}>
-                                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                       <TimePicker
-                                         label="Start Time"
-                                         value={newClass.startTime ? dayjs(newClass.startTime, 'h:mmA') : null}
-                                         onChange={(newValue) => setNewClass({ ...newClass, startTime: formatTime(newValue) })}
-                                         slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                                       />
-                                       <TimePicker
-                                         label="End Time"
-                                         value={newClass.endTime ? dayjs(newClass.endTime, 'h:mmA') : null}
-                                         onChange={(newValue) => setNewClass({ ...newClass, endTime: formatTime(newValue) })}
-                                         slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                                       />
-                                     </LocalizationProvider>
-                                   </Box>
-                                 </Box>
-                               </TableCell>
-                               <TableCell align="center">
-                                 <Button
-                                   variant="contained"
-                                   size="small"
-                                   onClick={() => {
-                                     const { courseCode, courseNumber, section, instructor, roomId, startTime, endTime, days, studentCount } = newClass;
-                                     if (!courseCode || !courseNumber || !section || !instructor || !roomId || !startTime || !endTime || days.length === 0 || !studentCount) {
-                                       setClassError('Please fill in all class fields');
-                                       return;
-                                     }
-                                     const validationResult = validateTuesdayThursdayRestriction(days, startTime, endTime);
-                                     if (!validationResult.valid) {
-                                       setClassError(validationResult.message || 'Invalid time slot selected');
-                                       return;
-                                     }
-                                     const availability = checkRoomAvailability(roomId, startTime, endTime, days, '');
-                                     if (!availability.available) {
-                                       setClassError(`Room is not available during selected time slot. Conflicts with: ${availability.conflict}`);
-                                       return;
-                                     }
-                                     try {
-                                       addClass({
-                                         semesterId: id!,
-                                         ...newClass
-                                       });
-                                       setNewClass(emptyClass());
-                                       setClassError('');
-                                     } catch (err) {
-                                       setClassError(err instanceof Error ? err.message : 'Failed to add class');
-                                     }
-                                   }}
-                                 >
-                                   Add Class
-                                 </Button>
-                               </TableCell>
-                             </TableRow>
-               {/* --- End Add Class Row --- */}
+                                <TableCell>
+                                  <TextField
+                                    size="small"
+                                    placeholder="Course Code"
+                                    value={newClass.courseCode}
+                                    onChange={(e) => setNewClass({ ...newClass, courseCode: e.target.value })}
+                                    fullWidth
+                                    inputProps={{ maxLength: 6 }}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <TextField
+                                    size="small"
+                                    placeholder="Course Number"
+                                    value={newClass.courseNumber}
+                                    onChange={(e) => setNewClass({ ...newClass, courseNumber: e.target.value })}
+                                    fullWidth
+                                    inputProps={{ maxLength: 6 }}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <TextField
+                                    size="small"
+                                    placeholder="Section"
+                                    value={newClass.section}
+                                    onChange={(e) => setNewClass({ ...newClass, section: e.target.value })}
+                                    fullWidth
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <TextField
+                                    size="small"
+                                    placeholder="Instructor"
+                                    value={newClass.instructor}
+                                    onChange={(e) => setNewClass({ ...newClass, instructor: e.target.value })}
+                                    fullWidth
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <TextField
+                                    size="small"
+                                    placeholder="Students"
+                                    value={newClass.studentCount}
+                                    onChange={(e) => setNewClass({ ...newClass, studentCount: e.target.value })}
+                                    fullWidth
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <FormControl fullWidth size="small">
+                                    <Select
+                                      displayEmpty
+                                      value={newClass.roomId}
+                                      onChange={(e) => setNewClass({ ...newClass, roomId: e.target.value })}
+                                      renderValue={(selected) => {
+                                        if (!selected) {
+                                          return <em style={{ color: 'grey' }}>Select Room</em>;
+                                        }
+                                        const room = semesterRooms.find(r => r.id === selected);
+                                        return room?.roomNumber;
+                                      }}
+                                      error={Boolean(newClass.roomId && newClass.startTime && newClass.endTime && newClass.days.length > 0 &&
+                                        !checkRoomAvailability(newClass.roomId, newClass.startTime, newClass.endTime, newClass.days).available)}
+                                    >
+                                      <MenuItem disabled value="">
+                                        <em>Select Room</em>
+                                      </MenuItem>
+                                      {semesterRooms.map((room) => (
+                                        <MenuItem key={room.id} value={room.id}>
+                                          {room.roomNumber}
+                                        </MenuItem>
+                                      ))}
+                                    </Select>
+                                  </FormControl>
+                                </TableCell>
+                                <TableCell>
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    <ToggleButtonGroup
+                                      size="small"
+                                      value={newClass.days}
+                                      onChange={(_, newDays) => setNewClass({ ...newClass, days: newDays })}
+                                      aria-label="days"
+                                    >
+                                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
+                                        <ToggleButton key={day} value={day} aria-label={day}>
+                                          {day.charAt(0)}
+                                        </ToggleButton>
+                                      ))}
+                                    </ToggleButtonGroup>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <TimePicker
+                                          label="Start Time"
+                                          value={newClass.startTime ? dayjs(newClass.startTime, 'h:mmA') : null}
+                                          onChange={(newValue) => setNewClass({ ...newClass, startTime: formatTime(newValue) })}
+                                          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                                        />
+                                        <TimePicker
+                                          label="End Time"
+                                          value={newClass.endTime ? dayjs(newClass.endTime, 'h:mmA') : null}
+                                          onChange={(newValue) => setNewClass({ ...newClass, endTime: formatTime(newValue) })}
+                                          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                                        />
+                                      </LocalizationProvider>
+                                    </Box>
+                                  </Box>
+                                </TableCell>
+                                <TableCell align="center">
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={() => {
+                                      const { courseCode, courseNumber, section, instructor, roomId, startTime, endTime, days, studentCount } = newClass;
+                                      if (!courseCode || !courseNumber || !section || !instructor || !roomId || !startTime || !endTime || days.length === 0 || !studentCount) {
+                                        setClassError('Please fill in all class fields');
+                                        return;
+                                      }
+                                      const validationResult = validateTuesdayThursdayRestriction(days, startTime, endTime);
+                                      if (!validationResult.valid) {
+                                        setClassError(validationResult.message || 'Invalid time slot selected');
+                                        return;
+                                      }
+                                      const availability = checkRoomAvailability(roomId, startTime, endTime, days, '');
+                                      if (!availability.available) {
+                                        setClassError(`Room is not available during selected time slot. Conflicts with: ${availability.conflict}`);
+                                        return;
+                                      }
+                                      try {
+                                        addClass({
+                                          semesterId: id!,
+                                          ...newClass
+                                        });
+                                        setNewClass(emptyClass());
+                                        setClassError('');
+                                      } catch (err) {
+                                        setClassError(err instanceof Error ? err.message : 'Failed to add class');
+                                      }
+                                    }}
+                                  >
+                                    Add Class
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                {/* --- End Add Class Row --- */}
             </TableBody>
           </Table>
         </TableContainer>
@@ -1023,8 +1058,6 @@ const SemesterDetailsScreen: React.FC = () => {
 
       {/* Add Class Modal (Optional - can be removed if only inline add is desired) */}
         <>
-          {console.log('semesterRooms:', semesterRooms)}
-          {console.log('rooms:', rooms)}
         </>
       <AddClassModal
         open={addClassModalOpen}

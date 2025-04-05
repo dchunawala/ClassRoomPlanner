@@ -252,10 +252,10 @@ const AddClassModal = ({ open, onClose, rooms, semesterId, classToClone }: AddCl
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
+            <TableBody  sx={{ '& .MuiTableCell-root': { verticalAlign: 'middle' } }}>
               {classEntries.map((entry, index) => {
                 const availableRooms = availableRoomsMap[index] || rooms;
-                const noRoomsAvailable = availableRooms.length === 0 && 
+                const noRoomsAvailable = availableRooms.length === 0 &&
                                         entry.startTime && 
                                         entry.endTime && 
                                         entry.days.length > 0;
@@ -380,7 +380,7 @@ const AddClassModal = ({ open, onClose, rooms, semesterId, classToClone }: AddCl
                         fullWidth
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                       <IconButton size="small" onClick={() => handleRemoveRow(index)} disabled={classEntries.length === 1}>
                         <DeleteIcon />
                       </IconButton>
