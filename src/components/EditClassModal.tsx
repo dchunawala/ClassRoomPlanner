@@ -35,6 +35,9 @@ interface EditClassModalProps {
     startTime: string;
     endTime: string;
     days: string[];
+    className: string; // Added className
+    classCode: string; // Added classCode
+    studentCount: string; // Added studentCount
   };
 }
 
@@ -167,6 +170,9 @@ const EditClassModal: React.FC<EditClassModalProps> = ({
         startTime: formattedStartTime,
         endTime: formattedEndTime,
         days,
+        className: classData.className, // Added className
+        classCode: classData.classCode, // Added classCode
+        studentCount: classData.studentCount // Added studentCount
       });
       onClose();
     } catch (err) {
