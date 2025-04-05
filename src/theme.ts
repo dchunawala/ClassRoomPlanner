@@ -3,18 +3,18 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#00274C',
-      light: '#00509E',
-      dark: '#001F3F',
+      main: '#0A4A84', // Middlesex Blue
+      light: '#3875B2',
+      dark: '#002156',
     },
     secondary: {
-      main: '#FFCB05',
-      light: '#FFD700',
-      dark: '#FFB700',
+      main: '#C0C0C0', // Middlesex Gray/Silver
+      light: '#F0F0F0',
+      dark: '#909090',
     },
     background: {
-      default: '#FFFFFF',
-      paper: '#F8F9FA',
+      default: '#F0F2F5', // Light gray background
+      paper: '#FFFFFF', // White for paper elements
     },
   },
   typography: {
