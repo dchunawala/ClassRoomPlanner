@@ -27,7 +27,6 @@ import {
   Select,
   FormHelperText,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
@@ -808,7 +807,6 @@ const SemesterDetailsScreen: React.FC = () => {
                                 className: cls.className,
                                 classCode: cls.classCode,
                                 studentCount: cls.studentCount,
-                                semesterId: id!
                               });
                             }}
                             aria-label="clone class"
